@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공유게시판</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* ── 입장 화면 ── */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .login-box h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .login-box input:focus { border-color: #007bff; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .btn-primary:hover { background: #0056b3; }
+
+        /* ── 메인 화면 ── */
+        .main-screen { display: none; }
+
+        .header {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #333;
+        }
+
+        .back-btn:hover { background: #f0f0f0; }
+
+        .header h2 { font-size: 18px; color: #333; }
+
+        .header-info { font-size: 13px; color: #888; }
+
+        /* ── 탭 ── */
+        .tabs-bar {
+            background: white;
+            padding: 0 16px;
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tabs-bar::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            padding: 14px 18px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #888;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab-del {
+            font-size: 12px;
+            color: #ccc;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .tab-del:hover { color: #dc3545 !important; background: #fff0f0; }
+
+        .add-tab-btn {
+            padding: 14px 16px;
+            background: none;
+            border: none;
+            color: #28a745;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: -2px;
+        }
+
+        /* ── 카드 목록 ── */
+        .list-view {
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .btn-refresh-list {
+            padding: 10px 16px;
+            background: #f0f0f0;
+            color: #555;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .btn-refresh-list:hover { background: #e0e0e0; }
+
+        .btn-write {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-write:hover { background: #0056b3; }
+
+        .memo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border-left: 4px solid #007bff;
+            transition: box-shadow 0.15s;
+        }
+
+        .memo-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+
+        .memo-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 6px;
+        }
+
+        .memo-card-meta {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .memo-card-meta .author {
+            color: #007bff;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+            font-size: 15px;
+        }
+
+        /* ── 상세 화면 ── */
+        .detail-view {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        .detail-view.active { display: block; }
+        .list-view.hidden { display: none; }
+
+        .detail-box {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .detail-meta {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-meta .author { color: #007bff; font-weight: 600; }
+
+        .detail-title-input {
+            width: 100%;
+            font-size: 20px;
+            font-weight: 700;
+            border: none;
+            outline: none;
+            margin-bottom: 16px;
+            color: #222;
+            padding: 0;
+            background: transparent;
+        }
+
+        .detail-content-input {
+            width: 100%;
+            min-height: 200px;
+            font-size: 15px;
+            border: none;
+            outline: none;
+            resize: vertical;
+            color: #333;
+            line-height: 1.7;
+            padding: 0;
+            font-family: inherit;
+            background: transparent;
+        }
+
+        .detail-divider {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 20px 0;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .file-upload-label:hover { background: #e0e0e0; }
+        .file-upload-label input[type="file"] { display: none; }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .file-item a { color: #007bff; text-decoration: none; font-size: 14px; }
+        .file-item a:hover { text-decoration: underline; }
+        .file-item-meta { font-size: 12px; color: #aaa; }
+
+        .detail-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        .btn-save {
+            padding: 12px 28px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover { background: #0056b3; }
+
+        .btn-delete {
+            padding: 12px 20px;
+            background: #fff0f0;
+            color: #dc3545;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover { background: #ffd6d6; }
+    </style>
+</head>
+<body>
+
+    <!-- 입장 화면 -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>📋 공유게시판</h1>
+            <input type="text" id="userName" placeholder="이름 입력">
+            <input type="text" id="roomCode" placeholder="방 코드 입력">
+            <button class="btn-primary" onclick="joinRoom()">입장</button>
+        </div>
+    </div>
+
+    <!-- 메인 화면 -->
+    <div class="main-screen" id="mainScreen">
+        <div class="header">
+            <div class="header-left">
+                <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">←</button>
+                <h2 id="headerTitle">공유게시판</h2>
+            </div>
+            <div class="header-info" id="headerInfo"></div>
+        </div>
+
+        <div class="tabs-bar" id="tabsBar">
+            <button class="add-tab-btn" onclick="addNewTab()">＋</button>
+        </div>
+
+        <!-- 카드 목록 -->
+        <div class="list-view" id="listView">
+            <div class="list-header">
+                <button class="btn-refresh-list" onclick="loadMemos()">↺ 새로고침</button>
+                <button class="btn-write" onclick="openWrite()">✏️ 새 글쓰기</button>
+            </div>
+            <div id="memoList"></div>
+        </div>
+
+        <!-- 상세 / 작성 화면 -->
+        <div class="detail-view" id="detailView">
+            <div class="detail-box">
+                <div class="detail-meta" id="detailMeta"></div>
+                <input class="detail-title-input" id="detailTitle" placeholder="제목을 입력하세요">
+                <textarea class="detail-content-input" id="detailContent" placeholder="내용을 입력하세요..."></textarea>
+
+                <hr class="detail-divider">
+
+                <label class="file-upload-label">
+                    📎 파일 첨부
+                    <input type="file" id="fileInput" multiple onchange="previewFiles()">
+                </label>
+                <div id="filesList"></div>
+
+                <div class="detail-actions">
+                    <button class="btn-save" onclick="saveMemo()">저장</button>
+                    <button class="btn-delete" id="deleteBtn" onclick="deleteMemo()" style="display:none">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, push, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCix6SUoqmT5UbMBDMgSK61sSImnf-uLb4",
+            authDomain: "memo-4d9de.firebaseapp.com",
+            databaseURL: "https://memo-4d9de-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "memo-4d9de",
+            storageBucket: "memo-4d9de.firebasestorage.app",
+            messagingSenderId: "385768551371",
+            appId: "1:385768551371:web:66c22ff09c968704427c4e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        let currentUser = '';
+        let currentRoom = '';
+        let currentTab = '';
+        let tabs = [];
+        let currentMemoKey = null;
+        let pendingFiles = [];
+
+        // 자동 입장
+        const savedName = localStorage.getItem('gb_name');
+        const savedCode = localStorage.getItem('gb_code');
+        if (savedName && savedCode) {
+            document.getElementById('userName').value = savedName;
+            document.getElementById('roomCode').value = savedCode;
+            setTimeout(() => joinRoom(), 0);
+        }
+
+        // ── 입장 ──
+        window.joinRoom = async function() {
+            const name = document.getElementById('userName').value.trim();
+            const code = document.getElementById('roomCode').value.trim();
+            if (!name) { alert('이름을 입력하세요'); return; }
+            if (!code) { alert('방 코드를 입력하세요'); return; }
+
+            currentUser = name;
+            currentRoom = code;
+
+            localStorage.setItem('gb_name', name);
+            localStorage.setItem('gb_code', code);
+
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            document.getElementById('headerInfo').textContent = `${currentUser} · ${currentRoom}`;
+
+            await loadTabs();
+        }
+
+        // ── 탭 ──
+        async function loadTabs() {
+            const snap = await get(ref(db, `rooms/${currentRoom}/tabs`));
+            tabs = snap.exists() ? snap.val() : ['공지사항'];
+            if (!snap.exists()) await set(ref(db, `rooms/${currentRoom}/tabs`), tabs);
+            renderTabs();
+            switchTab(tabs[0]);
+        }
+
+        function renderTabs() {
+            const bar = document.getElementById('tabsBar');
+            const addBtn = bar.querySelector('.add-tab-btn');
+            bar.querySelectorAll('.tab-btn').forEach(b => b.remove());
+            tabs.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn' + (name === currentTab ? ' active' : '');
+                btn.innerHTML = `<span>${name}</span>${tabs.length > 1 ? `<span class="tab-del">&times;</span>` : ''}`;
+                btn.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('tab-del')) {
+                        deleteTab(name);
+                    } else {
+                        switchTab(name);
+                    }
+                });
+                bar.insertBefore(btn, addBtn);
+            });
+        }
+
+        function switchTab(name) {
+            currentTab = name;
+            document.getElementById('headerTitle').textContent = name;
+            renderTabs();
+            showList();
+            loadMemos();
+        }
+
+        window.addNewTab = async function() {
+            const name = prompt('탭 이름을 입력하세요:');
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim();
+            if (tabs.includes(trimmed)) { alert('이미 있는 탭입니다'); return; }
+            tabs.push(trimmed);
+            await set(ref(db, `rooms/${currentRoom}/tabs`), tabs);
+            renderTabs();
+            switchTab(trimmed);
+        }
+
+        async function deleteTab(name) {
+            if (tabs.length <= 1) { alert('마지막 탭은 삭제할 수 없습니다'); return; }
+            if (!confirm(`'${name}' 탭을 삭제하시겠습니까?`)) return;
+            tabs = tabs.filter(t => t !== name);
+            await set(ref(db, `rooms/${currentRoom}/tabs`), tabs);
+            await set(ref(db, `rooms/${currentRoom}/data/${name}`), null);
+            if (currentTab === name) switchTab(tabs[0]);
+            else renderTabs();
+        }
+
+        // ── 화면 전환 ──
+        function showList() {
+            document.getElementById('listView').classList.remove('hidden');
+            document.getElementById('detailView').classList.remove('active');
+            document.getElementById('backBtn').style.display = 'none';
+        }
+
+        function showDetail() {
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('detailView').classList.add('active');
+            document.getElementById('backBtn').style.display = 'block';
+        }
+
+        window.goBack = function() {
+            showList();
+            loadMemos();
+        }
+
+        // ── 목록 ──
+        window.loadMemos = async function() {
+            const snap = await get(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos`));
+            const list = document.getElementById('memoList');
+            list.innerHTML = '';
+
+            if (!snap.exists()) {
+                list.innerHTML = '<div class="empty-state">아직 작성된 글이 없습니다</div>';
+                return;
+            }
+
+            const memos = snap.val();
+            const keys = Object.keys(memos).reverse();
+
+            keys.forEach(key => {
+                const m = memos[key];
+                const card = document.createElement('div');
+                card.className = 'memo-card';
+                card.innerHTML = `
+                    <div class="memo-card-title">${m.title || '(제목 없음)'}</div>
+                    <div class="memo-card-meta">
+                        <span class="author">${m.author}</span>
+                        작성 ${new Date(m.created || m.updated).toLocaleString()}
+                        ${m.created && m.updated !== m.created ? '· 수정 ' + new Date(m.updated).toLocaleString() : ''}
+                    </div>
+                `;
+                card.onclick = () => openDetail(key, m);
+                list.appendChild(card);
+            });
+        }
+
+        // ── 새 메모 ──
+        window.openWrite = function() {
+            currentMemoKey = null;
+            pendingFiles = [];
+            document.getElementById('detailTitle').value = '';
+            document.getElementById('detailContent').value = '';
+            document.getElementById('detailMeta').innerHTML = `작성자: <span class="author">${currentUser}</span>`;
+            document.getElementById('filesList').innerHTML = '';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            showDetail();
+        }
+
+        // ── 상세 보기 ──
+        function openDetail(key, memo) {
+            currentMemoKey = key;
+            pendingFiles = [];
+            document.getElementById('detailTitle').value = memo.title || '';
+            document.getElementById('detailContent').value = memo.content || '';
+            const createdStr = new Date(memo.created || memo.updated).toLocaleString();
+            const updatedStr = memo.created && memo.updated !== memo.created ? ' · 수정 ' + new Date(memo.updated).toLocaleString() : '';
+            document.getElementById('detailMeta').innerHTML = `
+                <span class="author">${memo.author}</span> · 작성 ${createdStr}${updatedStr}
+            `;
+            document.getElementById('deleteBtn').style.display = 'inline-block';
+            document.getElementById('fileInput').value = '';
+            renderFiles(memo.files || {});
+            showDetail();
+        }
+
+        function renderFiles(files) {
+            const list = document.getElementById('filesList');
+            list.innerHTML = '';
+            Object.values(files).forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <a href="${f.url}" target="_blank">📄 ${f.name} (${f.author})</a>
+                    <span class="file-item-meta">${new Date(f.uploaded).toLocaleString()}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // ── 저장 ──
+        window.saveMemo = async function() {
+            const title = document.getElementById('detailTitle').value.trim();
+            const content = document.getElementById('detailContent').value;
+            if (!title) { alert('제목을 입력하세요'); return; }
+
+            let existingFiles = {};
+            if (currentMemoKey) {
+                const snap = await get(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos/${currentMemoKey}/files`));
+                if (snap.exists()) existingFiles = snap.val();
+            }
+
+            for (let file of pendingFiles) {
+                const fRef = storageRef(storage, `rooms/${currentRoom}/${currentTab}/${Date.now()}_${file.name}`);
+                await uploadBytes(fRef, file);
+                const url = await getDownloadURL(fRef);
+                const key = Date.now().toString();
+                existingFiles[key] = { name: file.name, url, author: currentUser, uploaded: Date.now() };
+            }
+
+            const now = Date.now();
+            const memoData = {
+                title,
+                content,
+                author: currentUser,
+                created: currentMemoKey ? null : now,
+                updated: now,
+                files: existingFiles
+            };
+            if (currentMemoKey) {
+                const snap2 = await get(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos/${currentMemoKey}/created`));
+                memoData.created = snap2.exists() ? snap2.val() : now;
+            }
+
+            if (currentMemoKey) {
+                await set(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos/${currentMemoKey}`), memoData);
+            } else {
+                await push(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos`), memoData);
+            }
+
+            pendingFiles = [];
+            document.getElementById('fileInput').value = '';
+            alert('저장되었습니다');
+            goBack();
+        }
+
+        // ── 삭제 ──
+        window.deleteMemo = async function() {
+            if (!currentMemoKey) return;
+            if (!confirm('이 메모를 삭제하시겠습니까?')) return;
+            await remove(ref(db, `rooms/${currentRoom}/data/${currentTab}/memos/${currentMemoKey}`));
+            goBack();
+        }
+
+        // ── 파일 미리보기 ──
+        window.previewFiles = function() {
+            const input = document.getElementById('fileInput');
+            pendingFiles = Array.from(input.files);
+            const list = document.getElementById('filesList');
+            list.querySelectorAll('.pending-file').forEach(e => e.remove());
+            pendingFiles.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'file-item pending-file';
+                div.innerHTML = `<span>📄 ${file.name} (${currentUser}) <span style="color:#28a745;font-size:12px">· 저장 시 업로드</span></span>`;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
